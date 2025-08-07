@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Student Identifier</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image"></script>
+  </head>
+  <body>
+    <input type="file" accept="image/*" onchange="previewAndPredict(event)">
+    <img id="preview" width="224" />
+    <script>
+      const URL = "./"; // Same folder as model.html
+      let model, maxPredictions;
+
+      async function loadModel() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+        model = await tmImage.load(modelURL, metadataURL);
+        maxPredictions = model.getTotalClasses();
+      }
+
+      async function previewAndPredict(event) {
+        const file = event.target.files[0];
+        const img = document.getElementById("preview");
+        img.src = URL.createObjectURL(file);
+        await img.onload;
+
+        const prediction = await model.predict(img);
+        prediction.sort((a, b) => b.probability - a.probability);
+        const topPrediction = prediction[0].className;
+
+        // Send prediction back to MIT App Inventor
+        if (window.AppInventor) {
+          window.AppInventor.setWebViewString(topPrediction);
+        } else {
+          alert("Predicted: " + topPrediction);
+        }
+      }
+
+      loadModel();
+    </script>
+  </body>
+</html>
